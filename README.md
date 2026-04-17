@@ -99,11 +99,13 @@ Aspiring Data Analyst
 👉 ये 3 points सीधे resume में डालो:
 
 ✔ Point 1
+
 Developed an end-to-end E-commerce Financial Analytics Dashboard using SQL, Excel, and Power BI to analyze revenue, profit, and customer behavior.
 
 ✔ Point 2
 
 Identified key profitability drivers by analyzing discount strategies, shipping efficiency, and customer segments, improving business decision insights.
+
 ✔ Point 3
 
 Designed interactive dashboards with drill-through, dynamic filtering, and KPI tracking, enabling detailed product-level and regional analysis.
