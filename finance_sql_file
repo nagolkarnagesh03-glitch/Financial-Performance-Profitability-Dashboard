@@ -1,0 +1,463 @@
+CREATE DATABASE finance ;
+USE finance;
+
+SELECT * FROM orders; 
+
+
+--  Total orders 
+
+SELECT COUNT(*) as total_orders
+FROM orders;
+
+
+-- Total revenue
+
+SELECT SUM(revenue) as total_revenue
+FROM orders;
+
+-- Total Profit 
+
+SELECT SUM(profit) as total_profit
+FROM orders;
+
+
+--  average order value
+
+SELECT AVG(revenue) as avg_order_value
+FROM orders ;
+
+
+-- total customers
+
+SELECT COUNT(*) as total_customers
+FROM orders;
+
+
+-- total product sold
+
+SELECT SUM(quantity) as total_quantity
+FROM orders ;
+
+
+--   unique categories
+
+SELECT DISTINCT category
+FROM orders;
+
+
+-- orders by status
+
+SELECT order_status , COUNT(*) as orders
+FROM orders
+GROUP BY order_status 
+ORDER BY orders DESC ;
+
+
+--  orders by payment method
+
+SELECT payment_method , COUNT(*) as total_orders
+FROM orders
+GROUP BY payment_method
+ORDER BY total_orders DESC ;
+
+
+-- revenue by region
+
+
+SELECT Region , SUM(Revenue) as total_revenue
+FROM orders 
+GROUP BY Region
+ORDER BY total_revenue DESC ; 
+
+
+--  Top 10 Customers by Revenue
+
+SELECT customerid , SUM(Revenue) as total_revenue
+FROM orders
+GROUP BY customerid
+ORDER BY total_revenue DESC
+LIMIT 10 ;
+
+
+--  Top 10 Customers by Profit
+
+SELECT customerid , SUM(profit) as total_profit
+FROM orders
+GROUP BY customerid
+ORDER BY total_profit DESC
+LIMIT 10 ;
+
+
+--  Revenue by category
+
+SELECT category , SUM(revenue) as total_revenue
+FROM orders
+GROUP BY category
+ORDER BY total_revenue DESC
+LIMIT 10 ;
+
+-- profit by category
+
+SELECT category , SUM(profit) as profit
+FROM orders
+GROUP BY category 
+ORDER BY profit DESC ;
+
+-- revenue by sub- subcategory 
+
+SELECT sub_category , SUM(revenue) as revenue
+FROM orders
+GROUP BY sub_category
+ORDER BY revenue DESC ;
+
+
+--  best selling products
+
+SELECT productname , SUM(quantity) as qty
+FROM orders
+GROUP BY productname
+ORDER BY qty DESC
+LIMIT 10;
+
+
+--  MOST profitable product
+
+SELECT productname , SUM(profit) as profit
+FROM orders
+GROUP BY productname 
+ORDER BY profit DESC 
+LIMIT 10 ;
+
+--  revenue by gender
+
+SELECT gender , SUM(revenue) as revenue
+FROM orders
+GROUP BY gender
+ORDER BY revenue DESC ;
+
+
+
+--  revenue by segment
+
+SELECT segment , SUM(revenue) as revenue
+FROM orders
+GROUP BY segment
+ORDER BY revenue DESC ;
+
+
+-- average discount by category 
+
+SELECT category , AVG(discount) as avg_discount
+FROM orders
+GROUP BY category ;
+
+
+-- revenue by year
+
+SELECT year , SUM(revenue) as revenue
+FROM orders
+GROUP BY year
+ORDER BY revenue DESC ;
+
+-- profit by year
+
+SELECT year , SUM(profit) as profit
+FROM orders
+GROUP BY year
+ORDER BY profit DESC; 
+
+
+-- Monthly Revenue Trend
+
+SELECT year , month,SUM(revenue) as revenue
+FROM orders
+GROUP BY year , month
+ORDER BY year , month;
+
+
+-- quarter revenue
+
+SELECT Quarter , SUM(revenue) as revenue
+FROM orders
+GROUP BY quarter
+ORDER BY revenue DESC ;
+
+
+--  revenue by season
+
+SELECT season , SUM(revenue) as revenue
+FROM orders
+GROUP BY season
+ORDER BY revenue DESC ;
+
+-- Highest Revenue Generating Country
+ 
+SELECT country , SUM(revenue) as revenue
+FROM orders
+GROUP BY country
+ORDER BY revenue DESC
+LIMIT 1;
+
+--  MOST profitable country
+
+SELECT country , SUM(profit) as profit
+FROM orders
+GROUP BY country
+ORDER BY profit desc 
+LIMIT 1;
+
+
+-- revenue and profit by region
+
+
+SELECT region , SUM(revenue) as revenue , SUM(profit) as profit
+FROM orders
+GROUP BY region;
+
+
+-- Top 5 Categories Contributing Revenue
+
+SELECT category , SUM(revenue) as revenue
+FROM orders
+GROUP BY category 
+ORDER BY revenue DESC
+LIMIT 5;
+
+
+-- Products Making Loss
+
+
+SELECT productname , SUM(profit) as profit
+FROM orders
+GROUP BY productname 
+HAVING SUM(profit) < 0 ;
+
+
+-- Rank Customers by Revenue
+
+
+SELECT customerid  , SUM(revenue) as revenue,
+RANK() OVER (ORDER BY SUM(revenue)DESC) as ranking
+FROM orders
+GROUP BY customerid ;
+
+
+
+-- Top Customer in Each Region
+
+with cte as(
+
+SELECT region , customerid , SUM(revenue) as revenue,
+RANK() OVER (PARTITION BY region ORDER BY SUM(revenue) DESC) as rnk
+FROM orders
+GROUP BY region , customerid 
+)
+
+SELECT * FROM cte
+WHERE rnk = 1 ;
+
+
+
+-- Running Revenue Total
+
+
+SELECT year ,
+	   month , 
+       SUM(revenue)as  revenue,
+       SUM(SUM(revenue)) OVER (ORDER BY year , month ) as running_total
+FROM orders
+GROUP BY year , month ;
+
+
+--  Previous Month Revenue Comparison
+
+WITH cte as
+( 
+SELECT year , month , SUM(revenue) as revenue
+FROM orders
+GROUP BY year , month
+)
+SELECT * ,
+     LAG(Revenue) OVER (ORDER BY year , month) previous_month
+     FROM cte ;
+     
+     
+     
+--  prodit margin
+
+SELECT ROUND(SUM(profit) * 100.0 / SUM(revenue),2) as profit_margin
+FROM orders ;
+
+-- avg shipping cost
+
+SELECT AVG(shipping_cost) as avg_ship_cost
+FROM orders ;
+
+-- avg shipping days
+
+SELECT AVG(shipping_days) as ship_days
+FROM orders ;
+
+
+-- revenue by shipping method
+
+SELECT shipping_method , SUM(revenue) as revenue
+FROM orders 
+GROUP BY shipping_method ; 
+
+--  profit by shipping method
+
+SELECT shipping_method , SUM(profit) as profit
+FROM orders
+GROUP BY shipping_method ;
+
+
+ -- Revenue by Payment Method
+ 
+ SELECT payment_method , SUM(revenue) as revenue
+ FROM orders 
+ GROUP BY payment_method;
+
+
+
+-- Which category generates the highest revenue but low profit?
+
+SELECT category , 
+       SUM(revenue) as revenue,
+       SUM(profit) as profit,
+       SUM(profit) * 100.0 / SUM(revenue) as profit_margin
+FROM orders
+GROUP BY category 
+ORDER BY revenue DESC , profit_margin ASC ;
+
+
+-- Which products are frequently discounted but still not generating profit?
+
+SELECT productname , 
+       COUNT(*) as total_orders ,
+       AVG(discount) as avg_discount,
+       SUM(profit) as profit
+FROM orders
+GROUP BY productname 
+HAVING SUM(profit) <= 5000
+ORDER BY avg_discount DESC ;
+
+-- Which region has highest revenue but lowest profit margin?
+
+SELECT region ,
+       SUM(revenue) as revenue,
+       SUM(profit) as profit,
+       SUM(profit) * 100.0 / SUM(revenue) as profit_margin
+FROM orders 
+GROUP BY region
+ORDER BY revenue DESC , profit_margin ASC ;
+
+
+
+
+-- Does higher shipping cost increase revenue?
+
+SELECT 
+      CASE WHEN shipping_cost <= 50 THEN "Low"
+           WHEN shipping_cost BETWEEN 51 AND 90 THEN "Medium"
+           ELSE "High" end as ship_cost_bucket,
+           AVG(revenue) as avg_revenue
+FROM orders
+GROUP BY ship_cost_bucket;
+
+-- . Which customer segment is most profitable?
+
+
+SELECT segment , SUM(profit) as profit
+FROM orders
+GROUP BY segment
+ORDER BY profit DESC 
+LIMIT 1 ;
+
+
+-- Which season drives maximum sales?
+
+SELECT season , SUM(revenue) as revenue
+FROM orders
+GROUP BY season
+ORDER BY revenue DESC ;
+
+
+-- Which payment method is associated with higher order values?
+
+SELECT payment_method ,
+       AVG(revenue) as avg_order_value
+FROM orders
+GROUP BY payment_method
+ORDER BY avg_order_value DESC ;
+
+
+-- Which shipping method gives best profit margin?
+
+
+SELECT shipping_method ,
+       SUM(profit) as profit,
+       SUM(revenue) as revenue,
+       SUM(profit) * 100.0 / SUM(revenue) as profit_margin
+FROM orders
+GROUP BY shipping_method
+ORDER BY profit_margin;
+
+
+
+
+-- Which products should be discontinued because of continuous losses? 
+
+SELECT productname , COUNT(*) as total_orders,
+                     SUM(profit) as profit,
+                     SUM(revenue) as revenue
+FROM orders
+GROUP BY productname 
+HAVING SUM(profit) < 0
+ORDER BY profit asc;
+
+
+-- Customer Lifetime Value (CLV)
+
+
+SELECT
+    CustomerID,
+    SUM(Revenue) AS Lifetime_Revenue,
+    SUM(Profit) AS Lifetime_Profit,
+    COUNT(DISTINCT OrderID) AS Total_Orders
+FROM orders
+GROUP BY CustomerID
+ORDER BY Lifetime_Revenue DESC;
+
+ 
+      
+
+
+
+  
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+  
